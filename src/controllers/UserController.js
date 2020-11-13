@@ -1,5 +1,6 @@
 const Yup = require('yup')
 const knex = require('../database/connection')
+const  bcrypt = require('bcryptjs')
 
 module.exports = {
 	async index(req, res) {
@@ -38,13 +39,14 @@ module.exports = {
 			return res.status(400).json({error: "Usuário já existe"})
 		}
 		try{
+			passwordHash = await bcrypt.hash(password,8);
 			const user = await knex('users').insert({
 				username,
-				password,
+				password: passwordHash,
 				investorProfile,
 				cash
 			})
-			const userNew = await knex('users').where('id', '=', user);
+			const userNew = await knex.select('username', 'investorProfile', 'cash').from('users').where('id', '=', user);
 			
 			return res.status(201).json(userNew);
 		}catch(error){
@@ -54,7 +56,7 @@ module.exports = {
 
 	async update(req,res,next){
 		try{
-			const {username, investorProfile, cash} = req.body
+			const {username, investorProfile, cash, password, oldpassword} = req.body
 			const {id} = req.params
 
 			if(username){
@@ -67,7 +69,17 @@ module.exports = {
 			if(cash){
 				await knex('users').update({cash}).where({id})
 			}
-			const userNew = await knex('users').where('id', '=', user);
+
+			if(oldpassword){
+				if(!password){
+					return res.status(400).json({error: "Nessário informar a nova senha para a troca"})
+				}
+				const user = await knex('users').where('id', '=', id);
+				if(await bcrypt.compare(oldpassword, user[0].password)){
+					await knex('users').update({password}).where({id})
+				}
+			}
+			const userNew = await knex.select('username', 'investorProfile', 'cash').from('users').where('id', '=', id);
 
 			return res.status(200).json(userNew)
 		}catch(error){
@@ -81,6 +93,16 @@ module.exports = {
 			await knex('users').where('id','=', id).del()
 			return res.status(200).json({message: "Usuário deletado"})
 		}catch (error){
+			next(error)
+		}
+	},
+	
+	async indexOne(req,res,next){
+		const {id} = req.params
+		try{
+			const user = await knex.select('username', 'investorProfile', 'cash').from('users').where('id', '=', id);
+			return res.status(200).json({user})
+		}catch(error){
 			next(error)
 		}
 	}

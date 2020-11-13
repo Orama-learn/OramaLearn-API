@@ -1,0 +1,20 @@
+{
+  "name": "OramaLearn-API",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Orama-learn/OramaLearn-API.git",
+  "author": "pauloarn <44753954+pauloarn@users.noreply.github.com>",
+  "scripts": {
+    "start": "nodemon src/serve.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "knex": "^0.21.12",
+    "sqlite3": "^5.0.0"
+  }
+}
